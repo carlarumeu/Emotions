@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Rueda de emociones</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+
+  background-image: url("img/fondo.jpeg"); 
+  background-size: cover;             
+  background-position: center; 
+  background-repeat: no-repeat;
+  background-attachment: fixed;      
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+
+svg {
+  display: block;
+  background: transparent; 
+}
+
+
+/* TEXTOS GENERALES */
+text {
+  font-weight: bold;
+  fill: #222;
+  user-select: none;
+}
+
+/* SOLO NIVEL 3 */
+.level3-btn {
+  cursor: pointer;
+}
+.level3-btn:hover {
+  text-decoration: underline;
+}
+
+/* MODAL */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  font-size: 42px;
+}
+
+.modal-content {
+  background: rgb(75, 75, 75);
+  width: 70%;
+  height: 40%;
+  padding: 40px;
+  border-radius: 20px;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 24px;
+  margin-bottom: 24px;
+  color: #fff;
+}
+
+.modal-content textarea {
+  width: 100%;
+  min-height: 70px;
+  margin-top: 4px;
+  font-size: 30px;
+  border-radius: 20px;
+}
+
+.toggle {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.toggle button {
+  flex: 1;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 30px;
+  border-radius: 20px;
+}
+
+.toggle button.active {
+  background: #aaffad;
+  color: black;
+}
+
+#guardar{
+  font-size: 50px;
+  border-radius: 20px;
+  width: 100%;
+}
+
+.close {
+  float: right;
+  border: none;
+  background: none;
+  color: #fff;
+  font-size: 40px;
+  cursor: pointer;
+}
+
+.top-header {
+  position: fixed;
+  top: 40px;
+  left: 0;
+  width: 100%;
+  height: 80px;
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  padding: 30px 30px; 
+  box-sizing: border-box;
+
+  z-index: 20;
+}
+
+.calendar-link svg {
+  color: #fff;
+  cursor: pointer;
+}
+
+
+.calendar-link:hover {
+  transform: scale(1.1);
+}
+
+</style>
+</head>
+
+<body>
+<header class="top-header flex flex-column">
+  <a href="calendario.html" class="calendar-link" title="Ir al calendario">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
+        <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2"/>
+    </svg>
+  </a>
+
+  <a href="historial.html" class="calendar-link" title="Ir al historial">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
+        <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2"/>
+    </svg>
+  </a>
+</header>
+
+
+<svg id="chart" width="1000" height="1000" viewBox="0 0 500 500"></svg>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle"></h2>
+
+    <label>¿Por qué sientes la emoción?</label>
+    <textarea id="why"></textarea>
+
+    <label>¿Cuál es la función de la emoción?</label>
+    <textarea id="function"></textarea>
+
+    <label>¿Qué hiciste con la emoción?</label>
+    <div class="toggle">
+      <button id="feltBtn" onclick="setToggle(true)">La he dejado sentir</button>
+      <button id="avoidBtn" onclick="setToggle(false)">La he evitado</button>
+    </div>
+
+    <button id="guardar" style="margin-top:50px" onclick="saveEmotion()">Guardar emoción</button>
+  </div>
+</div>
+
+<script>
+const svg = document.getElementById("chart");
+const cx = 250, cy = 250;
+const angleStep = 360 / 72;
+
+let currentEmotion = "";
+let felt = null;
+
+// DATOS
+const groups = [
+  { color:"#7293FF", label:"TRISTEZA", count:12 },
+  { color:"#FFA941", label:"FELICIDAD", count:16 },
+  { color:"#FFF765", label:"SORPRESA", count:8 },
+  { color:"#D581FF", label:"MIEDO", count:12 },
+  { color:"#FF6868", label:"IRA", count:16 },
+  { color:"#7CFF68", label:"ASCO", count:8 }
+];
+
+const level1Words = {
+  Tristeza:["Culpable","Abandonado","Desesperado","Deprimido","Solo","Aburrido"],
+  Felicidad:["Optimista","Íntimo","Pacífico","Poderoso","Aceptado","Orgulloso","Interesado","Alegre"],
+  Sorpresa:["Entusiasmado","Asombrado","Confundido","Sorprendido"],
+  Miedo:["Asustado","Ansioso","Inseguro","Sumiso","Rechazado","Humillado"],
+  Ira:["Herido","Amenazado","Lleno de odio","Loco","Agresivo","Frustrado","Distante","Crítico"],
+  Asco:["Disconforme","Decepcionado","Horrible","Abstinencia"]
+};
+
+const level2Words = {
+  Tristeza:["Arrepentido","Avergonzado","Ignorado","Victimizado","Desvalido","Vulnerable","Melancólico","Vacío","Desamparado","Aislado","Apático","Indiferente"],
+  Felicidad:["Inspirado","Abierto","Bromista","Sensible","Esperanzado","Cariñoso","Provocativo","Valiente","Satisfecho","Respetado","Seguro","Importante","Curioso","Entretenido","Eufórico","Liberado"],
+  Sorpresa:["Enérgico","Entusiasta","Impresionado","Estupefacto","Perplejo","Desilusionado","Abatido","Conmocionado"],
+  Miedo:["Aterrado","Espantado","Agobiado","Preocupado","Insuficiente","Inferior","Inútil","Insignificante","Marginado","Alienado","Ireespetado","Ridiculizado"],
+  Ira:["Apenado","Devastado","Atacado","Celoso","Resentido","Ultrajado","Furioso","Rabioso","Provocador","Hostil","Enfurecido","Irritado","Introvertido","Desconfiado","Escéptico","Sarcástico"],
+  Asco:["Moralista","Reacio","Repugnante","Revoltoso","Asco","Odioso","Aversión","Vacilante"]
+};
+
+// UTILIDADES
+function polar(cx,cy,r,a){
+  const rad=(a-90)*Math.PI/180;
+  return {x:cx+r*Math.cos(rad),y:cy+r*Math.sin(rad)};
+}
+
+function arc(r1,r2,a1,a2){
+  const p1=polar(cx,cy,r2,a2),p2=polar(cx,cy,r2,a1),
+        p3=polar(cx,cy,r1,a1),p4=polar(cx,cy,r1,a2);
+  return `M${p1.x} ${p1.y} A${r2} ${r2} 0 0 0 ${p2.x} ${p2.y}
+          L${p3.x} ${p3.y} A${r1} ${r1} 0 0 1 ${p4.x} ${p4.y} Z`;
+}
+
+// DIBUJO
+let slice = 0;
+
+groups.forEach(g => {
+  const group = document.createElementNS("http://www.w3.org/2000/svg","g");
+
+  // CENTRO
+  const startAngle = slice * angleStep;
+  const endAngle = (slice + g.count) * angleStep;
+  const midAngle = (startAngle + endAngle) / 2;
+
+  const centerPath = document.createElementNS("http://www.w3.org/2000/svg","path");
+  centerPath.setAttribute("d",arc(0,80,startAngle,endAngle));
+  centerPath.setAttribute("fill",g.color);
+  group.appendChild(centerPath);
+
+  const centerPos = polar(cx,cy,45,midAngle);
+  const centerText = document.createElementNS("http://www.w3.org/2000/svg","text");
+  centerText.setAttribute("x",centerPos.x);
+  centerText.setAttribute("y",centerPos.y);
+  centerText.setAttribute("font-size","12");
+  centerText.setAttribute("text-anchor","middle");
+  centerText.setAttribute("dominant-baseline","middle");
+  centerText.textContent = g.label;
+  group.appendChild(centerText);
+
+  // NIVEL 2 (2 en 2)
+  for(let i=0;i<g.count;i+=2){
+    const start=(slice+i)*angleStep;
+    const end=(slice+i+2)*angleStep;
+    const mid=(start+end)/2;
+
+    const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d",arc(80,140,start,end));
+    p.setAttribute("fill",g.color);
+    group.appendChild(p);
+
+    const pos=polar(cx,cy,110,mid);
+    const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",pos.x);
+    t.setAttribute("y",pos.y);
+    t.setAttribute("font-size","10");
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","middle");
+
+    let rot=mid+90; if(rot>180&&rot<360)rot+=180;
+    t.setAttribute("transform",`rotate(${rot} ${pos.x} ${pos.y})`);
+    t.textContent = level1Words[g.label.charAt(0)+g.label.slice(1).toLowerCase()][i/2];
+    group.appendChild(t);
+  }
+
+  // NIVEL 3 (CLICABLE)
+  for(let i=0;i<g.count;i++){
+    const start=(slice+i)*angleStep;
+    const end=start+angleStep;
+    const mid=(start+end)/2;
+
+    const p=document.createElementNS("http://www.w3.org/2000/svg","path");
+    p.setAttribute("d",arc(140,200,start,end));
+    p.setAttribute("fill",g.color);
+    group.appendChild(p);
+
+    const pos=polar(cx,cy,170,mid);
+    const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x",pos.x);
+    t.setAttribute("y",pos.y);
+    t.setAttribute("font-size","8");
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("dominant-baseline","middle");
+    t.setAttribute("class","level3-btn");
+
+    let rot=mid+90; if(rot>180&&rot<360)rot+=180;
+    t.setAttribute("transform",`rotate(${rot} ${pos.x} ${pos.y})`);
+
+    const word = level2Words[g.label.charAt(0)+g.label.slice(1).toLowerCase()][i];
+    t.textContent = word;
+    t.onclick = () => openModal(word);
+    group.appendChild(t);
+  }
+
+  svg.appendChild(group);
+  slice += g.count;
+});
+
+// MODAL
+function openModal(word){
+  currentEmotion = word;
+  document.getElementById("modalTitle").textContent = word;
+  document.getElementById("why").value = "";
+  document.getElementById("function").value = "";
+  felt = null;
+  setToggle(null);
+  document.getElementById("modal").style.display = "flex";
+}
+
+function closeModal(){
+  document.getElementById("modal").style.display = "none";
+}
+
+function setToggle(value){
+  felt = value;
+  document.getElementById("feltBtn").classList.toggle("active", value === true);
+  document.getElementById("avoidBtn").classList.toggle("active", value === false);
+}
+
+function saveEmotion(){
+  const emotions = JSON.parse(localStorage.getItem("emotions") || "[]");
+
+  emotions.push({
+    emotion: currentEmotion,
+    date: new Date().toISOString().slice(0,10),
+    color: getColorForEmotion(currentEmotion),
+    why: document.getElementById("why").value,
+    function: document.getElementById("function").value,
+    felt: felt // true / false
+  });
+
+  localStorage.setItem("emotions", JSON.stringify(emotions));
+  closeModal();
+}
+
+
+function getColorForEmotion(emotion){
+  if(["Arrepentido","Avergonzado","Ignorado","Victimizado","Desvalido","Vulnerable","Melancólico","Vacío","Desamparado","Aislado","Apático","Indiferente"].includes(emotion)) return "#7293FF"; // tristeza
+  if(["Inspirado","Abierto","Bromista","Sensible","Esperanzado","Cariñoso","Provocativo","Valiente","Satisfecho","Respetado","Seguro","Importante","Curioso","Entretenido","Eufórico","Liberado"].includes(emotion)) return "#FFA941"; // felicidad
+  if(["Enérgico","Entusiasta","Impresionado","Estupefacto","Perplejo","Desilusionado","Abatido","Conmocionado"].includes(emotion)) return "#FFF765"; // sorpresa
+  if(["Aterrado","Espantado","Agobiado","Preocupado","Insuficiente","Inferior","Inútil","Insignificante","Marginado","Alienado","Ireespetado","Ridiculizado"].includes(emotion)) return "#D581FF"; // miedo
+  if(["Apenado","Devastado","Atacado","Celoso","Resentido","Ultrajado","Furioso","Rabioso","Provocador","Hostil","Enfurecido","Irritado","Introvertido","Desconfiado","Escéptico","Sarcástico"].includes(emotion)) return "#FF6868"; // ira
+  if(["Moralista","Reacio","Repugnante","Revoltoso","Asco","Odioso","Aversión","Vacilante"].includes(emotion)) return "#7CFF68"; // asco
+  return "#000";
+}
+
+
+</script>
+
+</body>
+</html>

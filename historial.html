@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Historial emocional</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+
+  background-image: url("img/fondo.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Flecha volver */
+.top-header {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
+}
+
+.back-link {
+  font-size: 40px;
+  text-decoration: none;
+  color: #222;
+}
+
+/* Contenedor */
+.container {
+  margin-top: 80px;
+  width: 90%;
+  max-width: 700px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+h1 {
+  text-align: center;
+  margin-top: 0;
+}
+
+/* Fecha */
+.date-group {
+  margin-top: 20px;
+}
+
+.date-title {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Emoción */
+.emotion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.emotion-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.delete-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="top-header">
+  <a href="index.html" class="back-link" title="Volver">←</a>
+</header>
+
+<div class="container">
+  <h1>Historial emocional</h1>
+  <div id="history"></div>
+</div>
+
+<script>
+function getEmotions() {
+  return JSON.parse(localStorage.getItem("emotions") || "[]");
+}
+
+function saveEmotions(data) {
+  localStorage.setItem("emotions", JSON.stringify(data));
+}
+
+function renderHistory() {
+  const container = document.getElementById("history");
+  container.innerHTML = "";
+
+  const emotions = getEmotions();
+
+  if (emotions.length === 0) {
+    container.textContent = "No hay emociones registradas todavía.";
+    return;
+  }
+
+  // Agrupar por fecha
+  const grouped = {};
+  emotions.forEach((e, index) => {
+    if (!grouped[e.date]) grouped[e.date] = [];
+    grouped[e.date].push({ ...e, index });
+  });
+
+  Object.keys(grouped)
+    .sort((a,b) => b.localeCompare(a))
+    .forEach(date => {
+      const group = document.createElement("div");
+      group.className = "date-group";
+
+      const title = document.createElement("div");
+      title.className = "date-title";
+      title.textContent = date;
+      group.appendChild(title);
+
+      grouped[date].forEach(item => {
+        const row = document.createElement("div");
+        row.className = "emotion";
+
+        const left = document.createElement("div");
+        left.className = "emotion-left";
+
+        const dot = document.createElement("div");
+        dot.className = "color-dot";
+        dot.style.background = item.color;
+
+        const text = document.createElement("div");
+        text.textContent = item.emotion;
+
+        left.appendChild(dot);
+        left.appendChild(text);
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "🗑";
+        del.onclick = () => deleteEmotion(item.index);
+
+        row.appendChild(left);
+        row.appendChild(del);
+        group.appendChild(row);
+      });
+
+      container.appendChild(group);
+    });
+}
+
+function deleteEmotion(index) {
+  const emotions = getEmotions();
+  emotions.splice(index, 1);
+  saveEmotions(emotions);
+  renderHistory();
+}
+
+renderHistory();
+</script>
+
+</body>
+</html>

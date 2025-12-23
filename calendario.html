@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calendario emocional</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  padding: 100px;
+
+  background-image: url("img/fondo.jpeg"); 
+  background-size: cover;            
+  background-position: center;        
+  background-repeat: no-repeat;
+  background-attachment: fixed;      
+}
+
+h1 {
+  text-align: center;
+}
+
+.calendar {
+  max-width: 700px;
+  margin: auto;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header button {
+  cursor: pointer;
+}
+
+.top-header {
+  position: fixed;
+  top: 40px;
+  left: 40px;
+  z-index: 20;
+}
+
+.back-link {
+  font-size: 80px;
+  text-decoration: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.back-link:hover {
+  transform: scale(1.1);
+}
+
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.day-name {
+  text-align: center;
+  font-weight: bold;
+}
+
+.day {
+  min-height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 4px;
+  background: #fafafa;
+}
+
+.day-number {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Calendario emocional</h1>
+
+<header class="top-header">
+  <a href="index.html" class="back-link " title="Volver">
+    ←
+  </a>
+</header>
+
+
+<div class="calendar">
+  <div class="header">
+    <button onclick="changeMonth(-1)">◀</button>
+    <h2 id="monthLabel"></h2>
+    <button onclick="changeMonth(1)">▶</button>
+  </div>
+
+  <div class="grid" id="calendarGrid"></div>
+</div>
+
+<script>
+const monthNames = [
+  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+];
+
+let currentDate = new Date();
+
+// EJEMPLO DE DATOS (esto vendrá del localStorage)
+function getEmotions() {
+  return JSON.parse(localStorage.getItem("emotions") || "[]");
+}
+
+function renderCalendar() {
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  document.getElementById("monthLabel").textContent =
+    `${monthNames[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const dayNames = ["L","M","X","J","V","S","D"];
+  dayNames.forEach(d => {
+    const el = document.createElement("div");
+    el.className = "day-name";
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  const startOffset = (firstDay + 6) % 7;
+
+  for (let i = 0; i < startOffset; i++) {
+    grid.appendChild(document.createElement("div"));
+  }
+
+  const emotions = getEmotions();
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement("div");
+    cell.className = "day";
+
+    const num = document.createElement("div");
+    num.className = "day-number";
+    num.textContent = day;
+    cell.appendChild(num);
+
+    const dots = document.createElement("div");
+    dots.className = "dots";
+
+    const dateStr = `${year}-${String(month + 1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+
+    emotions
+      .filter(e => e.date === dateStr)
+      .forEach(e => {
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        dot.style.background = e.color;
+        dots.appendChild(dot);
+      });
+
+    cell.appendChild(dots);
+    grid.appendChild(cell);
+  }
+}
+
+function changeMonth(delta) {
+  currentDate.setMonth(currentDate.getMonth() + delta);
+  renderCalendar();
+}
+
+renderCalendar();
+</script>
+
+</body>
+</html>
