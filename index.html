@@ -65,7 +65,7 @@ text {
 .modal-content {
   background: rgb(75, 75, 75);
   width: 70%;
-  height: 40%;
+  height: 50%;
   padding: 40px;
   border-radius: 20px;
 }
@@ -157,18 +157,25 @@ text {
 <body>
 <header class="top-header flex flex-column">
   <a href="calendario.html" class="calendar-link" title="Ir al calendario">
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
-        <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2"/>
-    </svg>
-  </a>
+  <!-- Calendario SVG -->
+  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+  </svg>
+</a>
 
-  <a href="historial.html" class="calendar-link" title="Ir al historial">
-    <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/>
-        <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="2"/>
-    </svg>
-  </a>
+<a href="historial.html" class="calendar-link" title="Ir al historial">
+  <!-- Historial SVG -->
+  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 3v5h5"></path>
+    <path d="M21 21v-5h-5"></path>
+    <path d="M8.5 15.5a5 5 0 1 1 7 0l3 3"></path>
+    <path d="M5.5 8.5l-3-3a5 5 0 1 1 7 0"></path>
+  </svg>
+</a>
+
 </header>
 
 

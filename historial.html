@@ -59,6 +59,16 @@ h1 {
   font-weight: bold;
   margin-bottom: 10px;
 }
+.back-link {
+  font-size: 80px;
+  text-decoration: none;
+  color: #fff;
+  cursor: pointer;
+}
+
+.back-link:hover {
+  transform: scale(1.1);
+}
 
 /* Emoción */
 .emotion {
@@ -138,6 +148,7 @@ function renderHistory() {
 
       const title = document.createElement("div");
       title.className = "date-title";
+      title.style.fontSize = "24px"; 
       title.textContent = date;
       group.appendChild(title);
 
@@ -147,6 +158,13 @@ function renderHistory() {
 
         const left = document.createElement("div");
         left.className = "emotion-left";
+        left.style.display = "flex";
+        left.style.flexDirection = "column";
+
+        const titulo = document.createElement("div");
+        titulo.style.display = "flex";
+        titulo.style.flexDirection = "row";
+        titulo.style.gap = "10px"; 
 
         const dot = document.createElement("div");
         dot.className = "color-dot";
@@ -154,9 +172,26 @@ function renderHistory() {
 
         const text = document.createElement("div");
         text.textContent = item.emotion;
+        text.style.fontSize = "20px"; 
 
-        left.appendChild(dot);
-        left.appendChild(text);
+        const contenido = document.createElement("div");
+        contenido.style.display = "flex";
+        contenido.style.flexDirection = "column";
+
+        const text2 = document.createElement("div");
+        text2.textContent = "¿Por qué? " + item.why;
+        const text3 = document.createElement("div");
+        text3.textContent = "Función: " + item.function;
+        const text4 = document.createElement("div");
+        text4.textContent = "¿La has dejado sentir? " + item.felt;
+
+        titulo.appendChild(dot);
+        titulo.appendChild(text);
+        contenido.appendChild(text2);
+        contenido.appendChild(text3);
+        contenido.appendChild(text4);
+        left.appendChild(titulo);
+        left.appendChild(contenido);
 
         const del = document.createElement("button");
         del.className = "delete-btn";
